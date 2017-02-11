@@ -116,7 +116,7 @@ gamLine <- function(x, y, col, log.x, log.y, spread=FALSE, smoother.args,
     on.exit(options(warn))
 # new June 18, 2014
     fam1 <- if(is.null(link)) fam else fam(link)
-    fit <- try(gam(y ~ s(x, k=k, bs=bs), weights=w, family=fam1))
+    fit <- try(mgcv::gam(y ~ mgcv::s(x, k=k, bs=bs), weights=w, family=fam1))
 # end bug fix.
     if (class(fit)[1] != "try-error"){
       y.eval <- predict(fit, newdata=data.frame(x=x.eval))
@@ -130,8 +130,8 @@ gamLine <- function(x, y, col, log.x, log.y, spread=FALSE, smoother.args,
     if(spread) { 
         res <- residuals(fit)
         pos <- res > 0
-        pos.fit <- try(gam(I(res^2) ~ s(x, k=k, bs=bs), subset=pos), silent=TRUE)
-        neg.fit <- try(gam(I(res^2) ~ s(x, k=k, bs=bs), subset=!pos), silent=TRUE)
+        pos.fit <- try(mgcv::gam(I(res^2) ~ mgcv::s(x, k=k, bs=bs), subset=pos), silent=TRUE)
+        neg.fit <- try(mgcv::gam(I(res^2) ~ mgcv::s(x, k=k, bs=bs), subset=!pos), silent=TRUE)
         if(class(pos.fit)[1] != "try-error"){
           y.pos <- y.eval + sqrt(offset^2 + predict(pos.fit, newdata=data.frame(x=x.eval)))
           y.pos <- if (log.y) exp(y.pos) else y.pos
@@ -177,16 +177,16 @@ quantregLine <- function(x, y, col, log.x, log.y, spread=FALSE, smoother.args,
     y <- y[ord]
     x.eval <- seq(min(x), max(x), length=evaluation) 
     if (!spread){
-        fit <- rqss(y ~ qss(x, lambda=lambda))
+        fit <- quantreg::rqss(y ~ quantreg::qss(x, lambda=lambda))
         y.eval <- predict(fit, newdata=data.frame(x=x.eval))
         y.eval <- if(log.y) exp(y.eval) else y.eval
         if(draw)lines(if(log.x) exp(x.eval) else x.eval, y.eval, lwd=lwd, col=col, lty=lty) else
           out <- list(x=if(log.x) exp(x.eval) else x.eval, y=y.eval)
     }
     else{
-        fit <- rqss(y ~ qss(x, lambda=lambda))
-        q1fit <- rqss(y ~ qss(x, lambda=lambda), tau=0.25)
-        q3fit <- rqss(y ~ qss(x, lambda=lambda), tau=0.75)
+        fit <- quantreg::rqss(y ~ quantreg::qss(x, lambda=lambda))
+        q1fit <- quantreg::rqss(y ~ quantreg::qss(x, lambda=lambda), tau=0.25)
+        q3fit <- quantreg::rqss(y ~ quantreg::qss(x, lambda=lambda), tau=0.75)
         y.eval <- predict(fit, newdata=data.frame(x=x.eval))
         y.eval.q1 <- predict(q1fit, newdata=data.frame(x=x.eval))
         y.eval.q3 <- predict(q3fit, newdata=data.frame(x=x.eval))
